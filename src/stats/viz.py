@@ -5,7 +5,7 @@ from typing import List
 
 import matplotlib.pyplot as plt # type:ignore
 
-from src.config import DATA_CSV_DIR
+from src.config import DATA_CSV_DIR, IMAGES_DIR
 from src.parsers.sysex_parser import ParamDict
 from src.data_loaders.csv import get_patchdata_all_common, get_patchdata_all_tones
 
@@ -22,8 +22,9 @@ def show_patches_using_each_struct() -> None:
     plt.bar(histogram.keys(), histogram.values())
     plt.xlabel('Structure Types')
     plt.ylabel('Patches w/ Structure Type')
-    plt.show()
-
+    # plt.show()
+    plt.savefig(IMAGES_DIR + 'patches_using_each_struct.png')
+    plt.close()
 
 def show_tones_active_in_patch() -> None:
     """
@@ -38,7 +39,9 @@ def show_tones_active_in_patch() -> None:
     plt.bar(histogram.keys(), histogram.values())
     plt.xlabel('Tones')
     plt.ylabel('Patches Having Tone Active')
-    plt.show()
+    # plt.show()
+    plt.savefig(IMAGES_DIR + 'tones_active_in_patch.png')
+    plt.close()
 
 
 def show_num_tones_active_in_patch() -> None:
@@ -48,7 +51,7 @@ def show_num_tones_active_in_patch() -> None:
     csv_filepath = DATA_CSV_DIR
     data = get_patchdata_all_tones(csv_filepath)
     # note: this relies on assumption that patches are grouped by patch number in sysex
-    # file and the fact that Pythobn's group by will not group patches having
+    # file and the fact that Python's group by will not group patches having
     # the same number that are not adjacent in input (so in different sysex files)
     data_grouped = groupby(data, key=lambda x: x['PATCH_NUMBER'])
     # add up the active tone switches (value of 1) in each patch
@@ -57,11 +60,13 @@ def show_num_tones_active_in_patch() -> None:
     plt.bar(histogram.keys(), histogram.values())
     plt.xlabel('Num Active Tones in Patch')
     plt.ylabel('Patches')
-    plt.show()
+    # plt.show()
+    plt.savefig(IMAGES_DIR + 'num_tones_active_in_patch.png')
+    plt.close()
 
 
 if __name__ == '__main__':
-    # show_patches_using_each_struct()
-    # show_tones_active_in_patch()
-     show_num_tones_active_in_patch()
+    show_patches_using_each_struct()
+    show_tones_active_in_patch()
+    show_num_tones_active_in_patch()
 
