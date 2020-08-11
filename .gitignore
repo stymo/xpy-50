@@ -5,3 +5,4 @@ data/*
 *.swo
 *__pycache__
 .gitconfig
+*scratch.py
