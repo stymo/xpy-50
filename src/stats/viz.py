@@ -12,18 +12,28 @@ from src.data_loaders.csv import get_patchdata_all_common, get_patchdata_all_ton
 
 def show_patches_using_each_struct() -> None:
     csv_filepath = DATA_CSV_DIR
-    # note that this only checks the structure between tones 1 and 2
-    # maybe we should see if any patches use a different structure type between
-    # their 1/2 and 3/4 tones?
     histogram = Counter(patch_data['STRUCTURE_TYPE_1_2']
             for patch_data
             in get_patchdata_all_common(csv_filepath))
     # TODO: sort by numeric order or most common?
     plt.bar(histogram.keys(), histogram.values())
-    plt.xlabel('Structure Types')
+    plt.xlabel('Structure Types - Tones 1 & 2')
     plt.ylabel('Patches w/ Structure Type')
     # plt.show()
     plt.savefig(IMAGES_DIR + 'patches_using_each_struct.png')
+    plt.close()
+
+def show_patches_using_each_struct_3_4() -> None:
+    csv_filepath = DATA_CSV_DIR
+    histogram = Counter(patch_data['STRUCTURE_TYPE_3_4']
+            for patch_data
+            in get_patchdata_all_common(csv_filepath))
+    # TODO: sort by numeric order or most common?
+    plt.bar(histogram.keys(), histogram.values())
+    plt.xlabel('Structure Types - Tones 3 & 4')
+    plt.ylabel('Patches w/ Structure Type')
+    # plt.show()
+    plt.savefig(IMAGES_DIR + 'patches_using_each_struct_3_4.png')
     plt.close()
 
 def show_tones_active_in_patch() -> None:
@@ -67,6 +77,7 @@ def show_num_tones_active_in_patch() -> None:
 
 if __name__ == '__main__':
     show_patches_using_each_struct()
+    show_patches_using_each_struct_3_4()
     show_tones_active_in_patch()
     show_num_tones_active_in_patch()
 
