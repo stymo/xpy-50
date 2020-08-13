@@ -149,7 +149,7 @@ def from_sysex_msg(msg: SysexMessage, keys: List[str]) -> ParamDict:
 
 
 def parse_patch_messages(patch_messages: List[SysexMessage]) -> Iterator[ParamDict]:
-    assert len(patch_messages) == 5, "expects list of exactly 4 messages"
+    assert len(patch_messages) == 5, "expects list of exactly 5 messages"
     com_msg = patch_messages[0]
     tone_messages = patch_messages[1:5]
     yield from_sysex_msg(com_msg, HEADER_KEYS+PARAMS_COMMON_KEYS)
