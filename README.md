@@ -15,7 +15,7 @@ Sample patches were found [here](https://www.polynominal.com/site/studio/gear/sy
 - [ ] Parse remainder of params from sysex files
 - [ ] Determine how many patches are duplicates of "INIT PATCH" and remove 
 - [ ] Add dir for processed data set
-- [ ] Data cleaning and augmentation based
+- [ ] Data cleaning and augmentation 
 - [ ] To/from one-hot functions
 - [ ] Actual patch generation!
 
