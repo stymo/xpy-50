@@ -1,3 +1,4 @@
+import binascii
 from typing import List, Dict, Callable, Optional, Tuple, Iterator, Union
 
 
@@ -22,18 +23,18 @@ HEADER_KEYS: List[str] = [
     ]
 
 PARAMS_COMMON_KEYS: List[str] = [
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
+    'PATCH_NAME_1',
+    'PATCH_NAME_2',
+    'PATCH_NAME_3',
+    'PATCH_NAME_4',
+    'PATCH_NAME_5',
+    'PATCH_NAME_6',
+    'PATCH_NAME_7',
+    'PATCH_NAME_8',
+    'PATCH_NAME_9',
+    'PATCH_NAME_10',
+    'PATCH_NAME_11',
+    'PATCH_NAME_12',
     '',
     '',
     '',
@@ -145,7 +146,9 @@ def chunk_sysex_msgs(msgs: List[SysexMessage]) -> Iterator[List[SysexMessage]]:
 def from_sysex_msg(msg: SysexMessage, keys: List[str]) -> ParamDict:
     com_data_hex = ((k,v) for k, v in zip(keys, msg.hex().split()))
     # TODO: add assertion here we are looking at correct data address? conditional on comm or tone
-    return {k: parsers_map[k](v) for k, v in com_data_hex}
+    # for now, assume any param w/out assigned parser is an ascii char
+    default_func = lambda x: str(binascii.unhexlify(x), 'utf-8')
+    return {k: parsers_map.get(k, default_func)(v) for k, v in com_data_hex}
 
 
 def parse_patch_messages(patch_messages: List[SysexMessage]) -> Iterator[ParamDict]:

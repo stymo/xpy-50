@@ -5,7 +5,7 @@ Very much a Work In Progress, current focus is on data analysis.
 
 ## Overview
 Inspired by similar work targeting the DX-7 synth, the core idea is to take a
-synthesizer that has a powerful sound engine but somewhat unweildly programming 
+synthesizer that has a powerful sound engine but somewhat unwieldly programming 
 interface and autogenerate patches for it based on a training set of patches. 
 
 Initial data analysis on training data is [here](src/stats/README.md).
