@@ -1,27 +1,21 @@
 import binascii
 from typing import List, Dict, Callable, Optional, Tuple, Iterator, Union
 
+# should be messages_per_patch?
+ROWS_PER_PATCH = 5
 
+# ParamToVal?
 ParamDict = Dict[str, Union[int,str,None]]
+
+ParamToParser = Dict[str, Callable[[str], Union[int, str, None]]]
 
 # stub for type checking
 class SysexMessage:
     def hex(self) -> str:
         pass
 
-
-HEADER_KEYS: List[str] = [
-    '', # TODO
-    '',
-    '',
-    '',
-    '',
-    '',
-    'PATCH_NUMBER',
-    'PATCH_OFFSET_ADDRESS',
-    '',
-    ]
-
+# TODO: replace with map to parser. may want to update map to named tuple that
+# will include word offset so we don't need entry for params we don't care about
 PARAMS_COMMON_KEYS: List[str] = [
     'PATCH_NAME_1',
     'PATCH_NAME_2',
@@ -96,12 +90,9 @@ PARAMS_COMMON_KEYS: List[str] = [
     'STRUCTURE_TYPE_3_4',
     ]
 
-PARAMS_TONE_KEYS: List[str] = [
-    'TONE_SWITCH',
-    ]
 
-# should be messages_per_patch?
-ROWS_PER_PATCH = 5
+def identity(x: str) -> str:
+    return x
 
 
 def parse_int_one_offset(x:str) -> int:
@@ -122,7 +113,7 @@ def parse_patch_offset_address(x:str) -> str:
         }
     return d[x]
 
-parsers_map: Dict[str, Callable[[str], Union[int, str, None]]] = {
+parsers_map: ParamToParser = {
     '': lambda x: None,
     # HEADER
     'PATCH_NUMBER': parse_int_one_offset,
@@ -133,6 +124,32 @@ parsers_map: Dict[str, Callable[[str], Union[int, str, None]]] = {
     'STRUCTURE_TYPE_3_4': parse_int_one_offset,
     # TONE
     'TONE_SWITCH': parse_int_zero_offset,
+}
+
+HEADER_TO_PARSER: ParamToParser = {
+    'WORD_0': identity,
+    'WORD_1': identity,
+    'WORD_2': identity,
+    'WORD_3': identity,
+    'WORD_4': identity,
+    'WORD_5': identity,
+    'PATCH_NUMBER': parse_int_one_offset,
+    'PATCH_OFFSET_ADDRESS': parse_int_zero_offset,
+    'WORD_8': identity
+}
+
+PARAMS_TONE: ParamToParser = {
+    'TONE_SWITCH': parse_int_zero_offset,
+    'WAVE_GROUP_TYPE': identity,
+    'WAVE_GROUP_ID': identity,
+    'WAVE_GROUP_NUMBER_WORD_1': identity,
+    'WAVE_GROUP_NUMBER_WORD_2': identity,
+    'WAVE_GAIN': identity,
+    'FXM_SWITCH': identity,
+    'FXM_COLOR': identity,
+    'FXM_DEPTH': identity,
+    'TONE_DELAY_MODE': identity,
+    'TONE_DELAY_TIME': identity,
 }
 
 
@@ -151,11 +168,19 @@ def from_sysex_msg(msg: SysexMessage, keys: List[str]) -> ParamDict:
     return {k: parsers_map.get(k, default_func)(v) for k, v in com_data_hex}
 
 
+def from_sysex_msg_tone(msg: SysexMessage, params: ParamToParser) -> ParamDict:
+    param_data_hex = ((m,v) for m, v in zip(params.items(), msg.hex().split()))
+    return {m[0]: m[1](v) for m, v in param_data_hex}
+
+
 def parse_patch_messages(patch_messages: List[SysexMessage]) -> Iterator[ParamDict]:
     assert len(patch_messages) == 5, "expects list of exactly 5 messages"
     com_msg = patch_messages[0]
     tone_messages = patch_messages[1:5]
-    yield from_sysex_msg(com_msg, HEADER_KEYS+PARAMS_COMMON_KEYS)
+    yield from_sysex_msg(com_msg, list(HEADER_TO_PARSER.keys())+PARAMS_COMMON_KEYS)
     for tone_msg in tone_messages:
-        yield from_sysex_msg(tone_msg, HEADER_KEYS+PARAMS_TONE_KEYS)
-
+        # TODO: `params` needs to be header and tone params as dict
+        tone_params = dict()
+        tone_params.update(HEADER_TO_PARSER)
+        tone_params.update(PARAMS_TONE)
+        yield from_sysex_msg_tone(tone_msg, tone_params)

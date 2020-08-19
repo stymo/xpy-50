@@ -6,8 +6,7 @@ from typing import List
 import mido  # type: ignore
 
 from src.config import DATA_CSV_DIR, DATA_SYX_DIR
-from src.parsers.sysex_parser import parse_patch_messages, PARAMS_COMMON_KEYS, \
-    PARAMS_TONE_KEYS, ROWS_PER_PATCH, HEADER_KEYS, chunk_sysex_msgs
+from src.parsers.sysex_parser import * # TODO: remove start import
 from src.data_loaders.csv import to_row
 
 
@@ -22,10 +21,11 @@ def sysex_file_to_csvs(syx_filepath: str, csv_path: str) -> None:
         with open(common_csvfile_name, 'w') as common_csvfile:
             with open(tones_csvfile_name, 'w') as tones_csvfile:
                 # TODO: for now, filter out '' keys
-                common_fieldnames = filter(lambda x: x != '', HEADER_KEYS+PARAMS_COMMON_KEYS)
+                common_fieldnames = list(HEADER_TO_PARSER.keys()) + \
+                    list(filter(lambda x: x!= '', PARAMS_COMMON_KEYS))
                 common_writer = csv.DictWriter(common_csvfile,
-                    fieldnames=list(common_fieldnames), extrasaction='ignore')
-                tones_fieldnames = filter(lambda x: x != '', HEADER_KEYS+PARAMS_TONE_KEYS)
+                    fieldnames=common_fieldnames, extrasaction='ignore')
+                tones_fieldnames = list(HEADER_TO_PARSER.keys()) + list(PARAMS_TONE.keys())
                 tones_writer = csv.DictWriter(tones_csvfile,
                     fieldnames=list(tones_fieldnames), extrasaction='ignore')
                 common_writer.writeheader()

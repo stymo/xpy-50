@@ -4,7 +4,7 @@ import glob
 from typing import Dict, Iterator, OrderedDict
 from typing import Iterator, Dict, Mapping, Any, Union
 
-from src.parsers.sysex_parser import ParamDict, HEADER_KEYS, PARAMS_COMMON_KEYS
+from src.parsers.sysex_parser import ParamDict
 
 
 def from_field(val:str) -> Union[int,str]:
