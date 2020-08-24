@@ -10,14 +10,11 @@ ParamDict = Dict[str, Union[int,str,None]]
 ParamToParser = Dict[str, Callable[[str], Union[int, str, None]]]
 
 
-# want something I can look up by:
-# offset,
-# that could give back ParamName, decoder func, eventually to-one-hot func?
-# class ParamDecoder(NamedTuple):
-#     name: str
-#     decoder: Callable[[str], Union[int, str, None]]
+# TODO: eventually add other Callable that will be to_onehot?
+# maps a parameter name to a function that decodes it from the sysex message
 ParamDecoder = Tuple[str, Callable[[str], Union[int, str, None]]]
 
+# maps an offset (byte number) to the corresponding ParamDecoder
 OffToDec = Dict[int, ParamDecoder]
 
 
@@ -50,35 +47,7 @@ def parse_patch_offset_address(x:str) -> str:
         }
     return d[x]
 
-parsers_map: ParamToParser = {
-    '': lambda x: None,
-    # HEADER
-    'PATCH_NUMBER': parse_int_one_offset,
-    'PATCH_OFFSET_ADDRESS': parse_patch_offset_address,
-    # COMMON
-    'PATCH_LEVEL': parse_int_zero_offset,
-    'STRUCTURE_TYPE_1_2': parse_int_one_offset,
-    'STRUCTURE_TYPE_3_4': parse_int_one_offset,
-    # TONE
-    'TONE_SWITCH': parse_int_zero_offset,
-}
 
-HEADER_TO_PARSER: ParamToParser = {
-    'WORD_0': identity,
-    'WORD_1': identity,
-    'WORD_2': identity,
-    'WORD_3': identity,
-    'WORD_4': identity,
-    'WORD_5': identity,
-    'PATCH_NUMBER': parse_int_one_offset,
-    'PATCH_OFFSET_ADDRESS': parse_int_zero_offset,
-    'WORD_8': identity
-}
-
-# HEADER_PARAM_TO_DECODER: OffToDec = {
-#     6: ParamDecoder(name='PATCH_NUMBER', decoder=parse_int_one_offset),
-#     7: ParamDecoder(name='PATCH_OFFSET_ADDRESS', decoder=parse_int_zero_offset),
-# }
 HEADER_PARAM_TO_DECODER: OffToDec = {
     6: ('PATCH_NUMBER', parse_int_one_offset),
     7: ('PATCH_OFFSET_ADDRESS', parse_int_zero_offset),
@@ -110,7 +79,6 @@ COMMON_PARAM_TO_DECODER: OffToDec = {
 }
 
 
-
 PARAMS_TONE: ParamToParser = {
     'TONE_SWITCH': parse_int_zero_offset,
     'WAVE_GROUP_TYPE': identity,
@@ -126,6 +94,21 @@ PARAMS_TONE: ParamToParser = {
 }
 
 
+TONE_PARAM_TO_DECODER: OffToDec = {
+    0 + HEADER_LEN: ('TONE_SWITCH', parse_int_zero_offset),
+    1 + HEADER_LEN: ('WAVE_GROUP_TYPE', identity),
+    2 + HEADER_LEN: ('WAVE_GROUP_ID', identity),
+    3 + HEADER_LEN: ('WAVE_GROUP_NUMBER_WORD_1', identity), # TODO: this will need to read from subsequent param
+    4 + HEADER_LEN: ('WAVE_GROUP_NUMBER_WORD_2', identity),
+    5 + HEADER_LEN: ('WAVE_GAIN', identity),
+    6 + HEADER_LEN: ('FXM_SWITCH', identity),
+    7 + HEADER_LEN: ('FXM_COLOR', identity),
+    8 + HEADER_LEN: ('FXM_DEPTH', identity),
+    8 + HEADER_LEN: ('TONE_DELAY_MODE', identity),
+    10 + HEADER_LEN: ('TONE_DELAY_TIME', identity),
+}
+
+
 def chunk_sysex_msgs(msgs: List[SysexMessage]) -> Iterator[List[SysexMessage]]:
     N = len(msgs)
     for chunk_start in range(0, N, ROWS_PER_PATCH):
@@ -133,33 +116,18 @@ def chunk_sysex_msgs(msgs: List[SysexMessage]) -> Iterator[List[SysexMessage]]:
         yield msgs[chunk_start:chunk_end]
 
 
-def from_sysex_msg(msg: SysexMessage, keys: List[str]) -> ParamDict:
-    com_data_hex = ((k,v) for k, v in zip(keys, msg.hex().split()))
-    # TODO: add assertion here we are looking at correct data address? conditional on comm or tone
-    # for now, assume any param w/out assigned parser is an ascii char
-    default_func = lambda x: str(binascii.unhexlify(x), 'utf-8')
-    return {k: parsers_map.get(k, default_func)(v) for k, v in com_data_hex}
-
-
-def from_sysex_msg_comm(msg: SysexMessage, off_to_dec: OffToDec) -> ParamDict:
+def from_sysex_msg(msg: SysexMessage, off_to_dec: OffToDec) -> ParamDict:
     msg_split: List[str] = msg.hex().split()
     return {v[0]: v[1](msg_split[k]) for k, v in off_to_dec.items()}
-
-
-def from_sysex_msg_tone(msg: SysexMessage, params: ParamToParser) -> ParamDict:
-    param_data_hex = ((m,v) for m, v in zip(params.items(), msg.hex().split()))
-    return {m[0]: m[1](v) for m, v in param_data_hex}
 
 
 def parse_patch_messages(patch_messages: List[SysexMessage]) -> Iterator[ParamDict]:
     assert len(patch_messages) == 5, "expects list of exactly 5 messages"
     com_msg = patch_messages[0]
     tone_messages = patch_messages[1:5]
+    # TODO: top level variable?
     comm_off_to_dec = {**HEADER_PARAM_TO_DECODER, **COMMON_PARAM_TO_DECODER}
-    yield from_sysex_msg_comm(com_msg, comm_off_to_dec)
+    yield from_sysex_msg(com_msg, comm_off_to_dec)
+    tone_off_to_dec = {**HEADER_PARAM_TO_DECODER, **TONE_PARAM_TO_DECODER}
     for tone_msg in tone_messages:
-        # TODO: `params` needs to be header and tone params as dict
-        tone_params = dict()
-        tone_params.update(HEADER_TO_PARSER)
-        tone_params.update(PARAMS_TONE)
-        yield from_sysex_msg_tone(tone_msg, tone_params)
+        yield from_sysex_msg(tone_msg, tone_off_to_dec)

@@ -14,30 +14,26 @@ def sysex_file_to_csvs(syx_filepath: str, csv_path: str) -> None:
     common_fieldnames = list(map(lambda x: x[0], HEADER_PARAM_TO_DECODER.values()))
     common_fieldnames_ = common_fieldnames +  list(map(lambda x: x[0], COMMON_PARAM_TO_DECODER.values()))
 
+    tone_fieldnames = list(map(lambda x: x[0], HEADER_PARAM_TO_DECODER.values()))
+    tone_fieldnames_ = tone_fieldnames +  list(map(lambda x: x[0], TONE_PARAM_TO_DECODER.values()))
+
     with open(syx_filepath, 'r') as syx_file:
-        # also open write file for common and tone csvs
         msgs = mido.read_syx_file(syx_filepath)
         file_basename = os.path.splitext(os.path.basename(syx_filepath))[0]
         common_csvfile_name = csv_path + file_basename + '_common.csv'
         tones_csvfile_name = csv_path + file_basename + '_tones.csv'
 
+        # also open write file for common and tone csvs
         with open(common_csvfile_name, 'w') as common_csvfile:
             with open(tones_csvfile_name, 'w') as tones_csvfile:
-                # TODO: for now, filter out '' keys
-                # common_fieldnames = list(HEADER_TO_PARSER.keys()) + \
-                #     list(filter(lambda x: x!= '', PARAMS_COMMON_KEYS))
-                # TODO: why is every file after first given duplicate hearder and row values?
-                # print(common_fieldnames_)
                 common_writer = csv.DictWriter(common_csvfile,
                     fieldnames=common_fieldnames_, extrasaction='ignore')
-                tones_fieldnames = list(HEADER_TO_PARSER.keys()) + list(PARAMS_TONE.keys())
                 tones_writer = csv.DictWriter(tones_csvfile,
-                    fieldnames=list(tones_fieldnames), extrasaction='ignore')
+                    fieldnames=list(tone_fieldnames_), extrasaction='ignore')
                 common_writer.writeheader()
                 tones_writer.writeheader()
 
                 for patch_msgs in chunk_sysex_msgs(msgs):
-                    # pass
                     patch_data_chunks = parse_patch_messages(patch_msgs)
                     com_data = to_row(next(patch_data_chunks))
                     common_writer.writerow(com_data)
