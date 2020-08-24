@@ -1,4 +1,4 @@
-import mido
+import mido # type:ignore
 
 def load_patches(path_to_syx_file):
     # TODO: config
