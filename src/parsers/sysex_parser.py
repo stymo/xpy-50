@@ -7,17 +7,16 @@ ROWS_PER_PATCH = 5
 # ParamToVal?
 ParamDict = Dict[str, Union[int,str,None]]
 
-ParamToParser = Dict[str, Callable[[str], Union[int, str, None]]]
+# ParamToParser = Dict[str, Callable[[str], Union[int, str, None]]]
 
+DecoderFunc = Callable[[List[str]], Union[int, str, None]]
 
 # TODO: eventually add other Callable that will be to_onehot?
-# maps a parameter name to a function that decodes it from the sysex message
-# ParamDecoder_ = Tuple[str, Callable[[str], Union[int, str, None]]]
-
+# holds information needed to decode a parameter
 class ParamDecoder(NamedTuple):
     name: str
-    decoder: Callable[[str], Union[int, str, None]]
-
+    decoder: DecoderFunc
+    length: int = 1
 
 # maps an offset (byte number) to the corresponding ParamDecoder
 OffToDec = Dict[int, ParamDecoder]
@@ -28,24 +27,25 @@ class SysexMessage:
         pass
 
 
-def identity(x: str) -> str:
+def identity(xs: List[str]) -> str:
+    x = xs[0]
     return x
 
 # TODO: refactor so each of these takes a list of strings, but normal case will be of len one. could use assertions for that...
 # then parser for 2 byte params can have full string: have to rejoin list and extract last chars...
-def parse_int_one_offset(x:str) -> int:
+def parse_int_one_offset(xs:List[str]) -> int:
+    x = xs[0]
     return int(x, 16) + 1
 
 
-def parse_int_zero_offset(x:str) -> int:
+def parse_int_zero_offset(xs:List[str]) -> int:
+    x = xs[0]  # TODO: replace w/ decorator?
     return int(x, 16)
 
 
-# def parse_2bytes(x:str, )
-
-
 # TODO: ultimately this should be an enum type?
-def parse_patch_offset_address(x:str) -> str:
+def parse_patch_offset_address(xs:List[str]) -> str:
+    x = xs[0]
     d = {'00': 'COMMON',
          '10': 'TONE_1',
          '12': 'TONE_2',
@@ -55,9 +55,13 @@ def parse_patch_offset_address(x:str) -> str:
     return d[x]
 
 
-def unhexlify(s: str) -> str:
-    return str(binascii.unhexlify(s), 'utf-8')
+def unhexlify(xs:List[str]) -> str:
+    x = xs[0]
+    return str(binascii.unhexlify(x), 'utf-8')
 
+
+def parse_two_bytes_one_offset(xs:List[str]) -> int:
+    return int(''.join(map(lambda x: x[1], xs)), 16) + 1
 
 
 HEADER_PARAM_TO_DECODER: OffToDec = {
@@ -87,27 +91,11 @@ COMMON_PARAM_TO_DECODER: OffToDec = {
 }
 
 
-PARAMS_TONE: ParamToParser = {
-    'TONE_SWITCH': parse_int_zero_offset,
-    'WAVE_GROUP_TYPE': identity,
-    'WAVE_GROUP_ID': identity,
-    'WAVE_GROUP_NUMBER_WORD_1': identity,
-    'WAVE_GROUP_NUMBER_WORD_2': identity,
-    'WAVE_GAIN': identity,
-    'FXM_SWITCH': identity,
-    'FXM_COLOR': identity,
-    'FXM_DEPTH': identity,
-    'TONE_DELAY_MODE': identity,
-    'TONE_DELAY_TIME': identity,
-}
-
-
 TONE_PARAM_TO_DECODER: OffToDec = {
     0 + HEADER_LEN: ParamDecoder('TONE_SWITCH', parse_int_zero_offset),
     1 + HEADER_LEN: ParamDecoder('WAVE_GROUP_TYPE', parse_int_zero_offset),
     2 + HEADER_LEN: ParamDecoder('WAVE_GROUP_ID', parse_int_zero_offset),
-    3 + HEADER_LEN: ParamDecoder('WAVE_GROUP_NUMBER_WORD_1', identity), # TODO: this will need to read from subsequent param
-    4 + HEADER_LEN: ParamDecoder('WAVE_GROUP_NUMBER_WORD_2', identity),
+    3 + HEADER_LEN: ParamDecoder('WAVE_GROUP_NUMBER_WORD', parse_two_bytes_one_offset, 2),
     5 + HEADER_LEN: ParamDecoder('WAVE_GAIN', parse_int_zero_offset),
     6 + HEADER_LEN: ParamDecoder('FXM_SWITCH', parse_int_zero_offset),
     7 + HEADER_LEN: ParamDecoder('FXM_COLOR', parse_int_one_offset),
@@ -127,10 +115,9 @@ def chunk_sysex_msgs(msgs: List[SysexMessage]) -> Iterator[List[SysexMessage]]:
 def from_sysex_msg(msg: SysexMessage, off_to_dec: OffToDec) -> ParamDict:
     # TODO: add validation that offset is within range based on whether this is a tone or common message
     msg_split: List[str] = msg.hex().split()
-    # return {v[0]: v[1](msg_split[k]) for k, v in off_to_dec.items()}
     d = {}
-    for i, (offset, param_decoder) in enumerate(off_to_dec.items()):
-        d.update({param_decoder.name: param_decoder.decoder(msg_split[offset])})
+    for offset, param_decoder in off_to_dec.items():
+        d.update({param_decoder.name: param_decoder.decoder(msg_split[offset: offset + param_decoder.length])})
     return d
 
 
