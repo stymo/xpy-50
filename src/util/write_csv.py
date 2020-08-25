@@ -29,7 +29,7 @@ def sysex_file_to_csvs(syx_filepath: str, csv_path: str) -> None:
                 common_writer = csv.DictWriter(common_csvfile,
                     fieldnames=common_fieldnames_, extrasaction='ignore')
                 tones_writer = csv.DictWriter(tones_csvfile,
-                    fieldnames=list(tone_fieldnames_), extrasaction='ignore')
+                    fieldnames=tone_fieldnames_, extrasaction='ignore')
                 common_writer.writeheader()
                 tones_writer.writeheader()
 

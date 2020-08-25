@@ -31,7 +31,8 @@ class SysexMessage:
 def identity(x: str) -> str:
     return x
 
-
+# TODO: refactor so each of these takes a list of strings, but normal case will be of len one. could use assertions for that...
+# then parser for 2 byte params can have full string: have to rejoin list and extract last chars...
 def parse_int_one_offset(x:str) -> int:
     return int(x, 16) + 1
 
@@ -128,8 +129,8 @@ def from_sysex_msg(msg: SysexMessage, off_to_dec: OffToDec) -> ParamDict:
     msg_split: List[str] = msg.hex().split()
     # return {v[0]: v[1](msg_split[k]) for k, v in off_to_dec.items()}
     d = {}
-    for i, (offset, decoder_map) in enumerate(off_to_dec.items()):
-        d.update({decoder_map[0]: decoder_map[1](msg_split[offset])})
+    for i, (offset, param_decoder) in enumerate(off_to_dec.items()):
+        d.update({param_decoder.name: param_decoder.decoder(msg_split[offset])})
     return d
 
 
