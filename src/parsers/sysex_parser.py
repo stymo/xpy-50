@@ -43,6 +43,11 @@ def parse_int_zero_offset(xs:List[str]) -> int:
     return int(x, 16)
 
 
+def parse_int_minus_63_offset(xs:List[str]) -> int:
+    x = xs[0]
+    return int(x, 16) -63
+
+
 # TODO: ultimately this should be an enum type?
 def parse_patch_offset_address(xs:List[str]) -> str:
     x = xs[0]
@@ -102,6 +107,60 @@ TONE_PARAM_TO_DECODER: OffToDec = {
     8 + HEADER_LEN: ParamDecoder('FXM_DEPTH', parse_int_one_offset),
     9 + HEADER_LEN: ParamDecoder('TONE_DELAY_MODE', parse_int_zero_offset),
     10 + HEADER_LEN: ParamDecoder('TONE_DELAY_TIME', parse_int_zero_offset),
+    # --------
+    11 + HEADER_LEN: ParamDecoder('VELOCITY_CROSS_FADE', parse_int_zero_offset),
+    12 + HEADER_LEN: ParamDecoder('VELOCITY_RANGE_LOWER', parse_int_one_offset),
+    13 + HEADER_LEN: ParamDecoder('VELOCITY_RANGE_UPPER', parse_int_one_offset),
+    14 + HEADER_LEN: ParamDecoder('KEYBOARD_RANGE_LOWER', parse_int_zero_offset),
+    15 + HEADER_LEN: ParamDecoder('KEYOBARD_RANGE_UPPER', parse_int_zero_offset),
+    16 + HEADER_LEN: ParamDecoder('REDAMPER_CONTROL_SWITCH', parse_int_zero_offset),
+    17 + HEADER_LEN: ParamDecoder('VOLUME_CONTROL_SWITCH', parse_int_one_offset),
+    18 + HEADER_LEN: ParamDecoder('HOLD_1_CONTROL_SWITCH', parse_int_one_offset),
+    19 + HEADER_LEN: ParamDecoder('BENDER_CONTROL_SWITCH', parse_int_zero_offset),
+    20 + HEADER_LEN: ParamDecoder('PAN_CONTROL_SWITCH', parse_int_zero_offset),
+    21 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DESTINATION_1', parse_int_zero_offset),
+    22 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DEPTH_1', parse_int_minus_63_offset),
+    23 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DESTINATION_2', parse_int_zero_offset),
+    24 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DEPTH_2', parse_int_minus_63_offset),
+    25 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DESTINATION_3', parse_int_zero_offset),
+    26 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DEPTH_3', parse_int_minus_63_offset),
+    26 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DESTINATION_4', parse_int_zero_offset),
+    28 + HEADER_LEN: ParamDecoder('CONTROLLER_1_DEPTH_4', parse_int_minus_63_offset),
+    29 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DESTINATION_1', parse_int_zero_offset),
+    30 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DEPTH_1', parse_int_minus_63_offset),
+    31 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DESTINATION_2', parse_int_zero_offset),
+    32 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DEPTH_2', parse_int_minus_63_offset),
+    33 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DESTINATION_3', parse_int_zero_offset),
+    34 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DEPTH_3', parse_int_minus_63_offset),
+    35 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DESTINATION_4', parse_int_zero_offset),
+    36 + HEADER_LEN: ParamDecoder('CONTROLLER_2_DEPTH_4', parse_int_minus_63_offset),
+    37 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DESTINATION_1', parse_int_zero_offset),
+    38 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DEPTH_1', parse_int_minus_63_offset),
+    39 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DESTINATION_2', parse_int_zero_offset),
+    40 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DEPTH_2', parse_int_minus_63_offset),
+    41 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DESTINATION_3', parse_int_zero_offset),
+    42 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DEPTH_3', parse_int_minus_63_offset),
+    43 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DESTINATION_4', parse_int_zero_offset),
+    44 + HEADER_LEN: ParamDecoder('CONTROLLER_3_DEPTH_4', parse_int_minus_63_offset),
+    # --------
+    45 + HEADER_LEN: ParamDecoder('LFO_1_WAVEFORM', parse_int_zero_offset),
+    46 + HEADER_LEN: ParamDecoder('LFO_1_KEY_SYNC', parse_int_zero_offset),
+    47 + HEADER_LEN: ParamDecoder('LFO_1_RATE', parse_int_zero_offset),
+    48 + HEADER_LEN: ParamDecoder('LFO_1_OFFSET', parse_int_zero_offset),
+    49 + HEADER_LEN: ParamDecoder('LFO_1_DELAY_TIME', parse_int_zero_offset),
+    50 + HEADER_LEN: ParamDecoder('LFO_1_FADE_MODE', parse_int_zero_offset),
+    51 + HEADER_LEN: ParamDecoder('LFO_1_FADE_TIME', parse_int_zero_offset),
+    52 + HEADER_LEN: ParamDecoder('LFO_1_EXTERNAL_SYNC', parse_int_zero_offset),
+    53 + HEADER_LEN: ParamDecoder('LFO_2_WAVEFORM', parse_int_zero_offset),
+    54 + HEADER_LEN: ParamDecoder('LFO_2_KEY_SYNC', parse_int_zero_offset),
+    55 + HEADER_LEN: ParamDecoder('LFO_2_RATE', parse_int_zero_offset),
+    56 + HEADER_LEN: ParamDecoder('LFO_2_OFFSET', parse_int_zero_offset),
+    57 + HEADER_LEN: ParamDecoder('LFO_2_DELAY_TIME', parse_int_zero_offset),
+    58 + HEADER_LEN: ParamDecoder('LFO_2_FADE_MODE', parse_int_zero_offset),
+    59 + HEADER_LEN: ParamDecoder('LFO_2_FADE_TIME', parse_int_zero_offset),
+    60 + HEADER_LEN: ParamDecoder('LFO_2_EXTERNAL_SYNC', parse_int_zero_offset),
+    # --------
+    # TODO: will need more offset functions... maybe make one offset func, with default of positive 1?
 }
 
 
