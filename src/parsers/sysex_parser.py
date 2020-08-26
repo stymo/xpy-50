@@ -155,6 +155,25 @@ TONE_PARAM_TO_DECODER: OffToDec = {
     59 + HEADER_LEN: ParamDecoder('LFO_2_FADE_TIME', parse_int),
     60 + HEADER_LEN: ParamDecoder('LFO_2_EXTERNAL_SYNC', parse_int),
     # --------
+    61 + HEADER_LEN: ParamDecoder('COURSE_TUNE', parse_int, offset=-48),
+    62 + HEADER_LEN: ParamDecoder('FINE_TUNE', parse_int, offset=-50),
+    63 + HEADER_LEN: ParamDecoder('RANDOM_PITCH_DEPTH', parse_int),
+    64 + HEADER_LEN: ParamDecoder('PITCH_KEYFOLLOW', parse_int),
+    65 + HEADER_LEN: ParamDecoder('PITCH_ENVELOPE_DEPTH', parse_int, offset=-12),
+    66 + HEADER_LEN: ParamDecoder('PITCH_ENV_VEL_SENSE', parse_int),
+    67 + HEADER_LEN: ParamDecoder('PITCH_ENV_VEL_TIME_1', parse_int),
+    68 + HEADER_LEN: ParamDecoder('PITCH_ENV_VEL_TIME_4', parse_int),
+    69 + HEADER_LEN: ParamDecoder('PITCH_ENV_TIME_KEYFOLLOW', parse_int),
+    70 + HEADER_LEN: ParamDecoder('PITCH_ENV_TIME_1', parse_int),
+    71 + HEADER_LEN: ParamDecoder('PITCH_ENV_TIME_2', parse_int),
+    72 + HEADER_LEN: ParamDecoder('PITCH_ENV_TIME_3', parse_int),
+    73 + HEADER_LEN: ParamDecoder('PITCH_ENV_TIME_4', parse_int),
+    74 + HEADER_LEN: ParamDecoder('PITCH_ENV_LEVEL_1', parse_int, offset=-63),
+    75 + HEADER_LEN: ParamDecoder('PITCH_ENV_LEVEL_2', parse_int, offset=-63),
+    76 + HEADER_LEN: ParamDecoder('PITCH_ENV_LEVEL_3', parse_int, offset=-63),
+    77 + HEADER_LEN: ParamDecoder('PITCH_ENV_LEVEL_4', parse_int, offset=-63),
+    78 + HEADER_LEN: ParamDecoder('PITCH_LFO_1_DEPTH', parse_int, offset=-63),
+    79 + HEADER_LEN: ParamDecoder('PITCH_LFO_2_DEPTH', parse_int, offset=-63),
 }
 
 
@@ -167,8 +186,7 @@ def chunk_sysex_msgs(msgs: List[SysexMessage]) -> Iterator[List[SysexMessage]]:
 
 def from_sysex_msg(msg: SysexMessage, off_to_dec: OffToDec) -> ParamDict:
     # TODO: add validation that offset is within range based on whether this is a tone or common message
-    msg_split: List[str] = msg.hex().split()
-    # TODO: make this a dictionary comprehension again
+    msg_split: List[str] = msg.hex().split() # TODO: make this a dictionary comprehension again
     d = {}
     for offset, param_decoder in off_to_dec.items():
         d.update({param_decoder.name:
