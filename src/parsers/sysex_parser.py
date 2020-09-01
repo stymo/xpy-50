@@ -59,8 +59,8 @@ def unhexlify(xs:List[str], *args) -> str:
     return str(binascii.unhexlify(x), 'utf-8')
 
 
-def parse_two_bytes_one_offset(xs:List[str], *args) -> int:
-    return int(''.join(map(lambda x: x[1], xs)), 16) + 1
+def parse_int_two_bytes(xs:List[str], offset=0) -> int:
+    return int(''.join(map(lambda x: x[1], xs)), 16) + offset
 
 
 HEADER_PARAM_TO_DECODER: OffToDec = {
@@ -85,9 +85,69 @@ COMMON_PARAM_TO_DECODER: OffToDec = {
         9 + HEADER_LEN: ParamDecoder('PATCH_NAME_10', unhexlify),
         10 + HEADER_LEN: ParamDecoder('PATCH_NAME_11', unhexlify),
         11 + HEADER_LEN: ParamDecoder('PATCH_NAME_12', unhexlify),
+        # --------
+        12 + HEADER_LEN: ParamDecoder('EFX_TYPE', unhexlify, offset=1),
+        13 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_1', unhexlify),
+        14 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_2', unhexlify),
+        15 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_3', unhexlify),
+        16 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_4', unhexlify),
+        17 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_5', unhexlify),
+        18 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_6', unhexlify),
+        19 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_7', unhexlify),
+        20 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_8', unhexlify),
+        21 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_9', unhexlify),
+        22 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_10', unhexlify),
+        23 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_11', unhexlify),
+        24 + HEADER_LEN: ParamDecoder('EFX_PARAMETER_12', unhexlify),
+        25 + HEADER_LEN: ParamDecoder('EFX_OUTPUT_ASSIGN', unhexlify),
+        26 + HEADER_LEN: ParamDecoder('EFX_MIX_OUT_SEND_LEVEL', parse_int),
+        27 + HEADER_LEN: ParamDecoder('EFX_CHORUS_SEND_LEVEL', parse_int),
+        28 + HEADER_LEN: ParamDecoder('EFX_REVERB_SEND_LEVEL', parse_int),
+        29 + HEADER_LEN: ParamDecoder('EFX_CONTROL_SOURCE_1', parse_int),
+        30 + HEADER_LEN: ParamDecoder('EFX_CONTROL_DEPTH_1', parse_int, offset=-63),
+        31 + HEADER_LEN: ParamDecoder('EFX_CONTROL_SOURCE_2', parse_int),
+        32 + HEADER_LEN: ParamDecoder('EFX_CONTROL_DEPTH_2', parse_int, offset=-63),
+        33 + HEADER_LEN: ParamDecoder('CHORUS_LEVEL', parse_int),
+        34 + HEADER_LEN: ParamDecoder('CHORUS_RATE', parse_int),
+        35 + HEADER_LEN: ParamDecoder('CHORUS_DEPTH', parse_int),
+        36 + HEADER_LEN: ParamDecoder('CHORUS_PRE_DELAY', parse_int),
+        37 + HEADER_LEN: ParamDecoder('CHORUS_FEEDBACK', parse_int),
+        38 + HEADER_LEN: ParamDecoder('CHORUS_OUTPUT', parse_int),
+        39 + HEADER_LEN: ParamDecoder('REVERB_TYPE', parse_int),
+        40 + HEADER_LEN: ParamDecoder('REVERB_LEVEL', parse_int),
+        41 + HEADER_LEN: ParamDecoder('REVERB_TIME', parse_int),
+        42 + HEADER_LEN: ParamDecoder('REVERB_HF_DAMP', parse_int),
+        43 + HEADER_LEN: ParamDecoder('DELAY_FEEDBACK', parse_int),
+        # --------
+        44 + HEADER_LEN: ParamDecoder('PATCH_TEMPO', parse_int_two_bytes, offset=0, length=2),
         46 + HEADER_LEN: ParamDecoder('PATCH_LEVEL', parse_int),
+        47 + HEADER_LEN: ParamDecoder('PATCH_PAN', parse_int, offset=-64),
+        48 + HEADER_LEN: ParamDecoder('ANALOG_FEEL', parse_int),
+        49 + HEADER_LEN: ParamDecoder('BEND_RANGE_UP', parse_int),
+        50 + HEADER_LEN: ParamDecoder('BEND_RANGE_DOWN', parse_int), # NOTE: range here is 0 - -48 so we need a multiplier
+        51 + HEADER_LEN: ParamDecoder('KEY_ASSIGN_MODE', parse_int),
+        52 + HEADER_LEN: ParamDecoder('SOLO_LEGATO', parse_int),
+        53 + HEADER_LEN: ParamDecoder('PORTAMENTO_SWITCH', parse_int),
+        54 + HEADER_LEN: ParamDecoder('PORTAMENTO_MODE', parse_int),
+        55 + HEADER_LEN: ParamDecoder('PORTAMENTO_TYPE', parse_int),
+        56 + HEADER_LEN: ParamDecoder('PORTAMENTO_START', parse_int),
+        57 + HEADER_LEN: ParamDecoder('PORTAMENTO_TIME', parse_int),
+        58 + HEADER_LEN: ParamDecoder('PATCH_CONTROL_SOURCE_2', parse_int),
+        59 + HEADER_LEN: ParamDecoder('PATCH_CONTROL_SOURCE_2', parse_int),
+        60 + HEADER_LEN: ParamDecoder('EFX_CONTROL_HOLD_PEAK', parse_int),
+        61 + HEADER_LEN: ParamDecoder('CONTROL_1_HOLD_PEAK', parse_int),
+        62 + HEADER_LEN: ParamDecoder('CONTROL_2_HOLD_PEAK', parse_int),
+        63 + HEADER_LEN: ParamDecoder('CONTROL_3_HOLD_PEAK', parse_int),
+        64 + HEADER_LEN: ParamDecoder('VELOCITY_RANGE_SWITCH', parse_int),
+        65 + HEADER_LEN: ParamDecoder('OCTAVE_SHIFT', parse_int, offset=-3),
+        66 + HEADER_LEN: ParamDecoder('STRETCH_TUNE_DEPTH', parse_int),
+        67 + HEADER_LEN: ParamDecoder('VOICE_PRIORITY', parse_int),
+        # --------
         68 + HEADER_LEN: ParamDecoder('STRUCTURE_TYPE_1_2', parse_int, offset=1),
+        69 + HEADER_LEN: ParamDecoder('BOOSTER_1_2', parse_int),
         70 + HEADER_LEN: ParamDecoder('STRUCTURE_TYPE_3_4', parse_int, offset=1),
+        71 + HEADER_LEN: ParamDecoder('BOOSTER_3_4', parse_int),
+        72 + HEADER_LEN: ParamDecoder('CLOCK_SOURCE', parse_int),
 }
 
 
@@ -95,7 +155,7 @@ TONE_PARAM_TO_DECODER: OffToDec = {
     0 + HEADER_LEN: ParamDecoder('TONE_SWITCH', parse_int),
     1 + HEADER_LEN: ParamDecoder('WAVE_GROUP_TYPE', parse_int),
     2 + HEADER_LEN: ParamDecoder('WAVE_GROUP_ID', parse_int),
-    3 + HEADER_LEN: ParamDecoder('WAVE_GROUP_NUMBER_WORD', parse_two_bytes_one_offset, 2),
+    3 + HEADER_LEN: ParamDecoder('WAVE_GROUP_NUMBER', parse_int_two_bytes, offset=1, length=2),
     5 + HEADER_LEN: ParamDecoder('WAVE_GAIN', parse_int),
     6 + HEADER_LEN: ParamDecoder('FXM_SWITCH', parse_int),
     7 + HEADER_LEN: ParamDecoder('FXM_COLOR', parse_int, offset=1),
