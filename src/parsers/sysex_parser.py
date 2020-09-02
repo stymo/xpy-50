@@ -7,11 +7,7 @@ ROWS_PER_PATCH = 5
 # ParamToVal?
 ParamDict = Dict[str, Union[int,str,None]]
 
-# ParamToParser = Dict[str, Callable[[str], Union[int, str, None]]]
-
-# DecoderFunc = Callable[[List[str], int], Union[int, str, None]]
-DecoderFunc = Callable[[List[str], Optional[int]], Union[int, str, None]]
-# DecoderFunc = Callable[Union[[List[str], int], [List[str]]], Union[int, str, None]]
+DecoderFunc = Callable[[List[str], Optional[int], Optional[int]], Union[int, str, None]]
 
 # TODO: eventually add other Callable that will be to_onehot?
 # holds information needed to decode a parameter
@@ -20,6 +16,7 @@ class ParamDecoder(NamedTuple):
     decoder: DecoderFunc
     length: int = 1
     offset: int = 0
+    multiplier: int = 1
 
 # maps an offset (byte number) to the corresponding ParamDecoder
 OffToDec = Dict[int, ParamDecoder]
@@ -37,9 +34,9 @@ def identity(xs: List[str], *args) -> str:
     return x
 
 
-def parse_int(xs:List[str], offset=0) -> int:
+def parse_int(xs:List[str], offset=0, multiplier=1, *args) -> int:
     x = xs[0]
-    return int(x, 16) + offset
+    return (int(x, 16) + offset) * multiplier
 
 
 # TODO: ultimately this should be an enum type?
@@ -59,7 +56,7 @@ def unhexlify(xs:List[str], *args) -> str:
     return str(binascii.unhexlify(x), 'utf-8')
 
 
-def parse_int_two_bytes(xs:List[str], offset=0) -> int:
+def parse_int_two_bytes(xs:List[str], offset=0, *args) -> int:
     return int(''.join(map(lambda x: x[1], xs)), 16) + offset
 
 
@@ -124,7 +121,7 @@ COMMON_PARAM_TO_DECODER: OffToDec = {
         47 + HEADER_LEN: ParamDecoder('PATCH_PAN', parse_int, offset=-64),
         48 + HEADER_LEN: ParamDecoder('ANALOG_FEEL', parse_int),
         49 + HEADER_LEN: ParamDecoder('BEND_RANGE_UP', parse_int),
-        50 + HEADER_LEN: ParamDecoder('BEND_RANGE_DOWN', parse_int), # NOTE: range here is 0 - -48 so we need a multiplier
+        50 + HEADER_LEN: ParamDecoder('BEND_RANGE_DOWN', parse_int, multiplier=-1),
         51 + HEADER_LEN: ParamDecoder('KEY_ASSIGN_MODE', parse_int),
         52 + HEADER_LEN: ParamDecoder('SOLO_LEGATO', parse_int),
         53 + HEADER_LEN: ParamDecoder('PORTAMENTO_SWITCH', parse_int),
@@ -302,9 +299,11 @@ def from_sysex_msg(msg: SysexMessage, off_to_dec: OffToDec) -> ParamDict:
     d = {}
     for offset, param_decoder in off_to_dec.items():
         d.update({param_decoder.name:
+            # TODO: maybe instead of named tuples, paramdecoders should be callables that we create, that have optional offsets and multipliers
             param_decoder.decoder(msg_split[offset:
                 offset + param_decoder.length],
-                param_decoder.offset
+                param_decoder.offset,
+                param_decoder.multiplier
                 )})
     return d
 
